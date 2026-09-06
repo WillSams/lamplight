@@ -1,0 +1,12 @@
+bin/
+build/
+*.o
+*.d
+CLAUDE.md
+.cache/
+.pi/
+compile_commands.json
+docs/specs/
+tools/
+TODO.md
+verify.sh

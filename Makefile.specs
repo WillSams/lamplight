@@ -1,0 +1,62 @@
+# Igloo BDD specs. Modeled on nightshift: one binary per spec area, linked
+# from specs/main.cpp via igloo::TestRunner.
+#
+#   make -f Makefile.specs test            # all specs
+#   make -f Makefile.specs test-dungeon    # one area
+#
+# `area` is a filename substring from specs/. A flat *.spec.cpp is only run
+# by `test` -- there is no per-file target.
+
+CXX      := g++
+# Pure logic links without the renderer. The net spec drives real sockets
+# through the engine, so the suite links the engine (which needs SDL at link
+# time); pure headers still include no SDL of their own.
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wno-missing-field-initializers -g \
+            -MMD -MP -I/usr/local/include -Isrc
+LDFLAGS  := -L/usr/local/lib -Wl,-rpath=/usr/local/lib \
+            -lstormenginev2 -lSDL2
+
+SPECDIR  := specs
+BUILD    := build/specs
+
+# Implementation files linked into every spec binary. The game's render code
+# (dungeonDraw.cpp) is deliberately NOT here: specs never touch SDL_Renderer.
+IMPL_SRC := src/dungeon/generate.cpp
+
+SPECSRCS := $(shell find $(SPECDIR) -name '*.cpp' ! -name 'main.cpp')
+SPECOBJS := $(patsubst $(SPECDIR)/%.cpp, $(BUILD)/%.o, $(SPECSRCS))
+TEST_BIN := $(BUILD)/tests
+
+# `test-%` runs every spec whose filename contains the given substring.
+AREA_SRCS = $(shell find $(SPECDIR) -name '*$(AREA)*.spec.cpp')
+AREA_OBJS = $(patsubst $(SPECDIR)/%.cpp, $(BUILD)/%.o, $(AREA_SRCS))
+
+.PHONY: all test test-% area-run clean
+
+all: $(TEST_BIN)
+
+test: $(TEST_BIN)
+	$(TEST_BIN)
+
+test-%:
+	@$(MAKE) --no-print-directory -f Makefile.specs area-run AREA=$*
+
+area-run: $(BUILD)/main.o $(AREA_OBJS) $(IMPL_SRC)
+	@test -n "$(AREA_SRCS)" || { echo "no specs matching '$(AREA)' under $(SPECDIR)/"; exit 1; }
+	@mkdir -p $(BUILD)
+	$(CXX) $(CXXFLAGS) -o $(BUILD)/tests-$(AREA) \
+	  $(BUILD)/main.o $(AREA_OBJS) $(IMPL_SRC) $(LDFLAGS)
+	./$(BUILD)/tests-$(AREA)
+
+$(TEST_BIN): $(BUILD)/main.o $(SPECOBJS) $(IMPL_SRC)
+	@mkdir -p $(BUILD)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BUILD)/%.o: $(SPECDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(BUILD)
+
+-include $(shell find $(BUILD) -name '*.d' 2>/dev/null)
