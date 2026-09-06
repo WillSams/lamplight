@@ -4,14 +4,16 @@
 
 - **Core loop**: generate → descend → swing or save the shot → hand the lamp over → open chests, kill monsters, reach the far room together
 - **One lamp between two players**: the lit pool moves with its carrier, so a player working alone is reading the dark by the glow left behind
-- **Darkness is the mechanic**: the vignette is near-opaque outside the lamp's radius, so running off-screen isn't a style choice — it's the whole game
+- **Darkness is the mechanic**: the vignette is near-opaque outside the lamp's radius, so running off-screen isn't a style choice - it's the whole game
 - **Monsters wake just past your light**: they emerge where the lamp's edge is, which means the dark side is where death lives
 - **Host-authoritative everything except position**: the joiner reports where it is; the host decides what damage landed. A client never claims a kill.
-- **The dungeon is a pure function of a seed**, generated on both machines independently — so it spec'd hardest, determinism first, before anything drew
+- **The dungeon is a pure function of a seed**, generated on both machines independently - so it spec'd hardest, determinism first, before anything drew
 - **Monsters near you only**: the snapshot's 256-item cap drives a 480px cull radius, which doubles as the visibility model
 - **BDD specs** cover the generator, camera, grid collision, combat, world rules, input, and a real loopback handshake (see `specs/`)
 
 Clean C++17, no frameworks beyond SDL2 + the engine. Build: `make && make run`.
+
+![Lamplight](screenshot.png)
 
 Built on [Storm! Engine v2](https://github.com/SamsWebs/storm-engine-v2) 2.3.0.
 
@@ -38,7 +40,7 @@ Built on [Storm! Engine v2](https://github.com/SamsWebs/storm-engine-v2) 2.3.0.
 
 ## Why this game
 
-As an example for **Storm! Engine**. Host-authoritative joiner-position co-op is the load-bearing test for three engine pieces used as designed: `NetServer`/`NetClient` chunking semantics, full-snapshot world state every tick, and a shared `LightingOverlay` whose single key light is a sprite on the world map, not a screen effect. Everything else — the generator, steering, hit tests, lamp plumbing — is pure, testable code with no engine dependency, which is what keeps a LAN game honest.
+As an example for **Storm! Engine**. Host-authoritative joiner-position co-op is the load-bearing test for three engine pieces used as designed: `NetServer`/`NetClient` chunking semantics, full-snapshot world state every tick, and a shared `LightingOverlay` whose single key light is a sprite on the world map, not a screen effect. Everything else - the generator, steering, hit tests, lamp plumbing - is pure, testable code with no engine dependency, which is what keeps a LAN game honest.
 
 ### What it will not showcase
 
